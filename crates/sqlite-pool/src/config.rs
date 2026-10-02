@@ -19,11 +19,18 @@ pub struct Config {
 
     /// [`Pool`] configuration.
     pub pool: PoolConfig,
+
+    pub cipher: Option<String>,
 }
 
 impl Config {
     /// Create a new [`Config`] with the given `path` of SQLite database file.
     #[must_use]
+
+    pub fn cipher_name(&self) -> &str {
+        self.cipher.as_deref().unwrap_or("chacha20")
+    }
+
     pub fn new(path: impl Into<PathBuf>) -> Self {
         Self {
             path: path.into(),
@@ -36,6 +43,7 @@ impl Config {
                 },
                 queue_mode: QueueMode::default(),
             },
+            cipher: Some("chacha20".to_string()),
         }
     }
 
@@ -97,3 +105,15 @@ impl Config {
 /// This is just a type alias to [`Infallible`] at the moment as there
 /// is no validation happening at the configuration phase.
 pub type ConfigError = Infallible;
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn default_cipher_is_chacha20() {
+        let config = Config::new("test.db");
+
+        assert_eq!(config.cipher_name(), "chacha20");
+    }
+}
